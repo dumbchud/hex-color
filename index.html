@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro Color DB</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+    <style>
+        * { box-sizing: border-box; }
+        :root { --bg: #0f1115; --card: #1c1f26; --text: #f8f8f2; --primary: #6366f1; --primary-hover: #4f46e5; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { width: 100%; max-width: 480px; }
+        h1 { text-align: center; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 30px; }
+        input, button, select { font-family: 'Inter', sans-serif; }
+        input[type="password"], .name-input { width: 100%; padding: 14px; border-radius: 10px; border: 1px solid #333; background: #15171c; color: white; font-size: 16px; outline: none; }
+        button { padding: 14px; border: none; border-radius: 10px; background: var(--primary); color: white; font-weight: 600; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: var(--primary-hover); }
+        #login-screen { display: flex; flex-direction: column; gap: 15px; margin-top: 50px; width: 100%; }
+        #app-screen { display: none; flex-direction: column; gap: 20px; width: 100%; }
+        .picker-card { background: var(--card); padding: 25px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; gap: 20px; box-shadow: 0 8px 16px rgba(0,0,0,0.4); border: 1px solid #2a2e37; }
+        .color-tabs { display: flex; width: 100%; gap: 10px; }
+        .color-tab { flex: 1; background: #15171c; border: 2px solid #333; padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; display: flex; flex-direction: column; gap: 8px; }
+        .color-tab.active { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
+        .tab-label { font-size: 11px; font-weight: 600; color: #8b949e; text-transform: uppercase; }
+        .tab-swatch { width: 100%; height: 25px; border-radius: 4px; }
+        .slider-group { width: 100%; background: #15171c; padding: 15px; border-radius: 10px; border: 1px solid #333; display: flex; flex-direction: column; gap: 10px; }
+        .dim-row { display: flex; gap: 10px; }
+        .dim-input-wrapper { flex: 1; background: #0f1115; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; padding-right: 10px; }
+        .dim-input-wrapper input { background: transparent; border: none; color: white; padding: 12px; width: 100%; outline: none; }
+        .dim-input-wrapper span { color: #555; font-size: 12px; font-weight: bold; }
+        .props-container { width: 100%; }
+        .prop-row { display: flex; align-items: center; background: #15171c; padding: 10px; border-radius: 10px; border: 1px solid #333; gap: 10px; margin-bottom: 8px; }
+        .prop-row label { flex: 1; font-size: 14px; color: #aaa; overflow: hidden; text-overflow: ellipsis; }
+        .prop-input-text { flex: 1.5; background: transparent; border: none; border-bottom: 1px solid #444; color: white; padding: 4px; outline: none; }
+        .freq-list { display: flex; flex-wrap: wrap; gap: 8px; background: #2a2e37; padding: 10px; border-radius: 10px; margin-top: 5px; }
+        .freq-chip { background: #15171c; border: 1px solid #444; border-radius: 20px; font-size: 12px; display: flex; align-items: center; overflow: hidden; }
+        .freq-chip-add { padding: 6px 12px; cursor: pointer; }
+        .freq-chip-del { padding: 6px 8px; color: #ef4444; border-left: 1px solid #444; cursor: pointer; }
+        .color-item { background: var(--card); border-radius: 12px; border: 1px solid #2a2e37; overflow: hidden; margin-bottom: 15px; }
+        .full-bar { width: 100%; height: 50px; border-bottom: 1px solid #2a2e37; }
+        .item-footer { padding: 15px; display: flex; justify-content: space-between; align-items: flex-start; }
+        .tag { background: #15171c; border: 1px solid #333; padding: 3px 7px; border-radius: 5px; font-size: 11px; color: #8b949e; margin: 2px; display: inline-block; }
+        .delete-btn { background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 8px; border-radius: 8px; font-size: 14px; }
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: white; color: black; padding: 10px 20px; border-radius: 20px; font-weight: bold; display: none; z-index: 1000; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>THE database 💔</h1>
+        <div id="login-screen">
+            <input type="password" id="password" placeholder="Enter Password">
+            <button onclick="login()">Login</button>
+        </div>
+        <div id="app-screen">
+            <div class="picker-card">
+                <div class="color-tabs">
+                    <div class="color-tab active" id="tab-0" onclick="switchTab(0)">
+                        <span class="tab-label">Base</span>
+                        <div class="tab-swatch" id="swatch-0"></div>
+                    </div>
+                    <div class="color-tab" id="tab-1" onclick="switchTab(1)">
+                        <span class="tab-label">Tip</span>
+                        <div class="tab-swatch" id="swatch-1"></div>
+                    </div>
+                </div>
+                <div id="color-wheel"></div>
+                <div class="slider-group">
+                    <div class="slider-header">
+                        <span style="color:#888; font-size:12px; font-weight:bold;">DIMENSIONS (<span id="unitDisplay">cm</span>)</span>
+                        <button onclick="toggleUnit()" style="padding:4px 8px; font-size:11px; background:#333;">Swap Unit</button>
+                    </div>
+                    <div class="dim-row">
+                        <div class="dim-input-wrapper"><input type="number" id="lengthInput" placeholder="Length (Ø)"><span>cm</span></div>
+                        <div class="dim-input-wrapper"><input type="number" id="girthInput" placeholder="Girth (Ø)"><span>cm</span></div>
+                    </div>
+                </div>
+                <div class="props-container">
+                    <div id="active-props-list"></div>
+                    <button onclick="togglePropMenu()" style="width:100%; background:#15171c; border:1px dashed #444; font-size:13px; color:#888;">+ Add Custom Property</button>
+                    <div id="prop-menu" style="display:none; margin-top:10px;">
+                        <div class="freq-list" id="freq-list"></div>
+                        <div style="display:flex; gap:5px; margin-top:10px;">
+                            <input type="text" id="newPropName" placeholder="Name" style="flex:1; padding:8px; font-size:13px; background:#15171c; color:white; border:1px solid #333; border-radius:5px;">
+                            <select id="newPropType" style="background:#15171c; color:white; border:1px solid #333; border-radius:5px;"><option value="text">Text</option><option value="check">Check</option></select>
+                            <button onclick="createNewProp()" style="padding:8px 12px; font-size:13px;">Add</button>
+                        </div>
+                    </div>
+                </div>
+                <input type="text" id="colorName" class="name-input" placeholder="Give this entry a name...">
+                <button onclick="saveColor()" style="width:100%;">Save Entry</button>
+            </div>
+            <button onclick="logout()" style="background:transparent; border:1px solid #333; color:#666; width:100%; margin-top:20px;">Logout</button>
+            <div id="colorList" class="color-list"></div>
+        </div>
+    </div>
+    <div id="toast">Copied!</div>
+    <script>
+        // CHANGE THIS URL
+        let WORKER_URL = "https://color-backend.luku-di456.workers.dev";
+        WORKER_URL = WORKER_URL.trim().replace(/\/+$/, '');
+
+        let colorPicker, activeTab = 0, useInches = false;
+        let activeColors = ["#6366f1", "#ec4899"];
+        let currentProps = [], freqProps = [];
+
+        window.onload = () => {
+            initColorPicker();
+            if(localStorage.getItem('db_password')) loadCloudData();
+        };
+
+        function initColorPicker() {
+            colorPicker = new iro.ColorPicker("#color-wheel", { width: 250, color: activeColors[0], layout: [{ component: iro.ui.Wheel }, { component: iro.ui.Slider, options: { sliderType: 'value' } }] });
+            colorPicker.on('color:change', (color) => {
+                activeColors[activeTab] = color.hexString;
+                document.getElementById('swatch-' + activeTab).style.backgroundColor = color.hexString;
+            });
+            document.getElementById('swatch-0').style.backgroundColor = activeColors[0];
+            document.getElementById('swatch-1').style.backgroundColor = activeColors[1];
+        }
+
+        function switchTab(i) {
+            activeTab = i;
+            document.getElementById('tab-0').classList.toggle('active', i === 0);
+            document.getElementById('tab-1').classList.toggle('active', i === 1);
+            colorPicker.color.hexString = activeColors[i];
+        }
+
+        function toggleUnit() {
+            useInches = !useInches;
+            const u = useInches ? 'in' : 'cm';
+            document.getElementById('unitDisplay').innerText = u;
+            document.querySelectorAll('.dim-input-wrapper span').forEach(s => s.innerText = u);
+        }
+
+        function togglePropMenu() { const m = document.getElementById('prop-menu'); m.style.display = m.style.display === 'none' ? 'block' : 'none'; }
+
+        async function loadCloudData() {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'flex';
+            const h = { 'Authorization': 'Bearer ' + localStorage.getItem('db_password') };
+            try {
+                const [p, c] = await Promise.all([fetch(WORKER_URL+'/api/props', {headers:h}), fetch(WORKER_URL+'/api/colors', {headers:h})]);
+                freqProps = await p.json(); renderFreqProps();
+                renderColors(await c.json());
+            } catch(e) { console.error(e); }
+        }
+
+        async function createNewProp() {
+            const n = document.getElementById('newPropName').value.trim();
+            const t = document.getElementById('newPropType').value;
+            if(!n) return;
+            addPropToForm(n, t);
+            if(!freqProps.find(p => p.name.toLowerCase() === n.toLowerCase())) {
+                freqProps.push({name:n, type:t}); renderFreqProps();
+                await fetch(WORKER_URL+'/api/props', {method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('db_password')}, body:JSON.stringify({name:n, type:t})});
+            }
+            document.getElementById('newPropName').value = '';
+        }
+
+        function renderFreqProps() {
+            const l = document.getElementById('freq-list'); l.innerHTML = '';
+            freqProps.forEach(p => {
+                l.innerHTML += `<div class="freq-chip"><span class="freq-chip-add" onclick="addPropToForm('${p.name}','${p.type}')">+ ${p.name}</span><span class="freq-chip-del" onclick="deleteFreqProp('${p.name}')">✕</span></div>`;
+            });
+        }
+
+        async function deleteFreqProp(n) {
+            freqProps = freqProps.filter(p => p.name !== n); renderFreqProps();
+            await fetch(WORKER_URL+'/api/props', {method:'DELETE', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('db_password')}, body:JSON.stringify({name:n})});
+        }
+
+        function addPropToForm(name, type) {
+            if(currentProps.find(p => p.name === name)) return;
+            currentProps.push({name, type, value: type === 'text' ? '' : false});
+            renderActiveProps();
+        }
+
+        function renderActiveProps() {
+            const c = document.getElementById('active-props-list'); c.innerHTML = '';
+            currentProps.forEach((p, i) => {
+                const input = p.type === 'text' ? `<input type="text" class="prop-input-text" oninput="currentProps[${i}].value=this.value">` : `<input type="checkbox" onchange="currentProps[${i}].value=this.checked">`;
+                c.innerHTML += `<div class="prop-row"><label>${p.name}</label>${input}<span onclick="currentProps.splice(${i},1);renderActiveProps()" style="color:#ef4444;cursor:pointer;">✕</span></div>`;
+            });
+        }
+
+        async function login() {
+            const p = document.getElementById('password').value.toLowerCase();
+            const res = await fetch(WORKER_URL + '/api/login', { method: 'POST', body: JSON.stringify({ password: p }) });
+            if (res.ok) { localStorage.setItem('db_password', p); loadCloudData(); } else { alert('Wrong password!'); }
+        }
+
+        async function saveColor() {
+            const body = {
+                name: document.getElementById('colorName').value || 'Unnamed Entry',
+                hex1: activeColors[0], hex2: activeColors[1],
+                length: document.getElementById('lengthInput').value, girth: document.getElementById('girthInput').value,
+                unit: useInches ? 'in' : 'cm', customFields: currentProps
+            };
+            const res = await fetch(WORKER_URL + '/api/colors', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('db_password') }, 
+                body: JSON.stringify(body) 
+            });
+            if (res.ok) { location.reload(); } else { alert("Failed to save. Check worker log."); }
+        }
+
+        async function deleteColor(id) { if(confirm('Delete?')) { await fetch(WORKER_URL+'/api/colors',{method:'DELETE', headers:{'Content-Type':'application/json','Authorization':'Bearer '+localStorage.getItem('db_password')}, body:JSON.stringify({id})}); loadCloudData(); } }
+        function logout() { localStorage.removeItem('db_password'); location.reload(); }
+
+        function renderColors(colors) {
+            const l = document.getElementById('colorList'); l.innerHTML = '';
+            colors.forEach(c => {
+                const h1 = c.hex1 || '#000', h2 = c.hex2 || '#fff';
+                const tags = (c.customFields || []).map(f => `<span class="tag">${f.name}: ${f.value}</span>`).join('');
+                l.innerHTML += `
+                    <div class="color-item">
+                        <div class="full-bar" style="background:linear-gradient(to right, ${h1} 50%, ${h2} 50%)"></div>
+                        <div class="item-footer">
+                            <div style="flex:1">
+                                <h3>${c.name}</h3>
+                                <p style="font-size:11px; color:#666;">L: ${c.length || 'Ø'} ${c.unit} | G: ${c.girth || 'Ø'} ${c.unit}</p>
+                                <div>${tags}</div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteColor('${c.id}')">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
